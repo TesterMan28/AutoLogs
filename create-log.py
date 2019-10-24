@@ -1,3 +1,5 @@
+# 16:27, 24/10/2019: TODO: Change update_values to check for any changes in TextCtrl instead of on EVT_KILL_FOCUS
+# 17:03, 23/10/2019: TODO: Complete horizontal_adding() as a helper method to add widgets in a horizontal row
 # 17:18, 22/10/2019: TODO: Trigger some kind of message or sound when the countdown timer reachest zero
 # Modules for time scheduler
 import schedule             # pip install schedule
@@ -8,6 +10,11 @@ import wx.richtext
 # Get current date
 import datetime
 from datetime import date
+# Playing audio
+from pydub import AudioSegment
+from pydub.playback import play
+# Threading
+import threading
 
   
 # def create_prompt():
@@ -15,11 +22,15 @@ from datetime import date
 # Frame to enter task details
 class CountdownFrame(wx.Frame):
     def __init__(self, duration):
-        # Temp variables. Check if it works
+        # Variables that determine if time values are zero
         self.second_zero = False
         self.minute_zero = False
         self.hour_zero = False
-    
+        
+        # Time values
+        self.seconds = 0
+        self.minutes = 0
+        self.hours = 0
     
         super().__init__(parent=None, title='Countdown Frame')
         self.panel = wx.Panel(self)
@@ -27,22 +38,37 @@ class CountdownFrame(wx.Frame):
         
         self.create_labels(duration)
         
+        # Creating a button to start playing audio. https://stackoverflow.com/questions/34266964/how-can-i-prevent-gui-freezing-in-wxpython
+        self.addButton = wx.Button(self.panel, -1, "Start", style=wx.BU_EXACTFIT)
+        self.main_sizer.Add(self.addButton, 0, wx.ALL | wx.CENTER, 5)
+        # self.addButton.Bind(wx.EVT_BUTTON, self.song_thread)
+        
         self.countdown_timer()
         self.panel.SetSizer(self.main_sizer)
         self.Show()
+        
+    @classmethod
+    def user_values(cls, value_dict):
+        self.seconds = value_dict["seconds"]
+        self.minutes = value_dict["minutes"]
+        self.hours = value_dict["hours"]
+        
+    @classmethod
+    def dropdown_values(cls, duration):
+        # TODO: Get values if user chooses from the dropdown menu
+        if (duration == 0):
+            self.minutes = 30
+        elif (duration == 1):
+            self.hours = 1
+        elif (duration == 2):
+            self.seconds = 10
     
     # Creating the time labels
     # Currently labels are overlapping each other
     def create_labels(self, duration):
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.seconds = 0
-        self.minutes = 0
-        self.hours = 0
         
-        if (duration == 0):
-            self.minutes = 30
-        elif (duration == 1):
-            self.hours = 1
+        
         
         
         # Hours label
@@ -76,6 +102,9 @@ class CountdownFrame(wx.Frame):
         # Its possible that calling like this without initialising a time.sleep(1000) may cause the program to be 1 second faster. Check it out
         if self.seconds == 0:
             self.second_zero = True
+            if (self.timer_end()):
+                self.song_thread()
+                return
         else:
             self.second_zero = False
             self.seconds -= 1
@@ -110,6 +139,22 @@ class CountdownFrame(wx.Frame):
         # This else statement may not be necessary
         else:
             self.hour_zero = False
+    
+    def timer_end(self):
+        # Check the value of hours, minutes, and seconds. If all 0, means timer end.
+        if (self.hour_zero, self.minute_zero, self.second_zero):
+            return True
+    
+    def song_thread(self):
+        th = threading.Thread(target=self.play_audio)
+        th.start()
+    
+    def play_audio(self):
+        # Assign a static song path. Temp
+        # Decide to use pydub after research. Alternative that may consider in the future is pyaudio(low level manipulation) or pythonsounddevice
+        song_path = 'song.mp3'
+        audio = AudioSegment.from_mp3(song_path)
+        play(audio)
 
 class MyFrame(wx.Frame):
     def __init__(self):
@@ -151,11 +196,19 @@ class StartFrame(wx.Frame):
         self.minutes = cur_time[1];
         self.seconds = cur_time[2];
         
+        # Temp dictionary variable to hold variables
+        self.time_values = {
+            "hours": self.hours,
+            "minutes": self.minutes,
+            "seconds": self.seconds
+        }
+        
         
         
         # Sizers for widget placements
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        row_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         
         super().__init__(parent=None, title="Start timer")
         start_panel = wx.Panel(self)
@@ -187,16 +240,108 @@ class StartFrame(wx.Frame):
         main_sizer.Add(self.set_label, 0, wx.ALL | wx.CENTER, 5)
         
         # Create drop down list
-        self.choices = wx.Choice(start_panel, choices=["30 minutes", "1 hour"])
+        self.choices = wx.Choice(start_panel, choices=["30 minutes", "1 hour", "10 seconds"])
         main_sizer.Add(self.choices, 0, wx.ALL | wx.CENTER, 5)
       
         
+        # Start the countdown timer. Creates an instance of CountdownFrame
         self.start_button = wx.Button(start_panel, label="Start")
         self.start_button.Bind(wx.EVT_BUTTON, self.start_click)
+        # self.start_button.Bind(wx.EVT_BUTTON, self.verify_values)
         main_sizer.Add(self.start_button, 0, wx.ALL | wx.CENTER, 5)
+        
+        
+        # Create initial styling for TextCtrl
+        text_colour = wx.Colour(245, 245, 245)
+        background_colour = wx.Colour(255, 255, 255)
+        font_styling = wx.Font(15, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_ITALIC, wx.FONTWEIGHT_LIGHT, True)
+        initial_style = wx.TextAttr(text_colour, background_colour, font_styling, wx.TEXT_ALIGNMENT_DEFAULT)
+        
+        # Creates TextCtrl boxes to enter time details
+        self.hour_textctrl = wx.TextCtrl(start_panel, value="hh", style=wx.TE_PROCESS_ENTER, name="hours")
+        self.hour_textctrl.SetStyle(0, len(self.hour_textctrl.GetValue()) - 1, initial_style)
+        row_sizer2.Add(self.hour_textctrl, 0, wx.ALL | wx.CENTER, 5)
+        self.hour_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)      # On obtain focus
+        self.hour_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
+        
+        
+        self.colon1 = wx.TextCtrl(start_panel, value=":", size=(10, 20), style=wx.TE_READONLY)
+        row_sizer2.Add(self.colon1, 0, wx.ALL | wx.CENTER, 5)
+        
+        self.minute_textctrl = wx.TextCtrl(start_panel, value="mm",  style=wx.TE_PROCESS_ENTER, name="minutes")
+        self.minute_textctrl.SetStyle(0, len(self.minute_textctrl.GetValue()) - 1, initial_style)
+        row_sizer2.Add(self.minute_textctrl, 0, wx.ALL | wx.CENTER, 5)
+        self.minute_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)
+        self.minute_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
+        
+        self.colon2 = wx.TextCtrl(start_panel, value=":", style=wx.TE_READONLY)
+        row_sizer2.Add(self.colon2, 0, wx.ALL | wx.CENTER, 5)
+        
+        self.second_textctrl = wx.TextCtrl(start_panel, value="ss",  style=wx.TE_PROCESS_ENTER, name="seconds")
+        self.second_textctrl.SetStyle(0, len(self.second_textctrl.GetValue() ) - 1, initial_style)
+        row_sizer2.Add(self.second_textctrl, 0, wx.ALL | wx.CENTER, 5)
+        self.second_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)
+        self.second_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
+        # End TextCtrl
+        
+        main_sizer.Add(row_sizer2)
         
         start_panel.SetSizer(main_sizer)
         self.Show()
+        
+    # OnFocus TextCtrl handler
+    def empty_text(self, event):
+        widget = event.GetEventObject() # Get widget that triggered this event
+        
+        if widget.IsModified(): # If user has edited the field, do not remove the user entered text
+            widget.Enable(True)
+            widget.SetFocus()
+            # event.Skip()
+        else:
+            widget.MarkDirty()  # Mark widget as edited
+            # Remove initial placeholder of TextCtrl
+            widget.Enable(True)
+            widget.SetFocus()
+            widget.SetValue("")
+            # event.Skip()
+        
+        
+        print(f'Window name: {widget.GetName()}')
+        
+        event.Skip()    # Allows default handling to take place. The insertion point is inserted
+        # widget.Bind(wx.EVT_KILL_FOCUS, self.update_values)        # Causes update_values to be called more and more times. Not sure why
+        
+    
+    # Printing statement repeats more and more times
+    def update_values(self, event):
+        # TODO: Update values on kill focus TextCtrl
+        widget = event.GetEventObject()
+        if widget.GetName() in self.time_values:
+            self.time_values[widget.GetName()] = widget.GetValue()
+            print(f'New value assigned to {widget.GetName()}: {widget.GetValue()}')
+        else:
+            print('Error in update_values method')
+        event.Skip()
+        
+    
+    # Passes values in TextCtrl to CountdownFrame
+    def timer_set(self):
+        set_hours = self.hour_textctrl.GetValue()
+        set_minutes = self.minute_textctrl.GetValue()
+        set_seconds = self.second_textctrl.GetValue()
+        
+        time_values = {
+            "hours": set_hours,
+            "minutes": set_minutes,
+            "seconds": set_seconds
+        }
+        
+        
+    
+        
+    # TODO: Helper method to add multiple widgets in a row. Not completed yet.
+    def horizontal_adding(self, *args):
+        row_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
     def update_choice(self, event):
         self.selected_item = (self.choices.GetString(self.choices.GetCurrentSelection()))
@@ -204,8 +349,24 @@ class StartFrame(wx.Frame):
         
     def start_click(self, event):
         # Opening another frame
-        # Returns the choice index
-        countdown_frame_instance = CountdownFrame(self.choices.GetCurrentSelection())
+        # Determine which CountdownFrame constructor to call
+        
+        # Set TextCtrl as priority
+        # if ()
+        
+        
+        # countdown_frame_instance = CountdownFrame(self.choices.GetCurrentSelection())
+        print(f'Current hours: {self.hours}')
+        print(f'Current minutes: {self.minutes}')
+        print(f'Current seconds: {self.seconds}')
+        
+    def verify_values(self, event):
+        ValueValidator(self.event, self.hours, self.minutes, self.seconds)
+
+class ValueValidator(wx.Validator):
+    def __init__ (self, event, hours, minutes, seconds):
+        if (self.Validate(event.GetEventObject()) and self.TransferFromWindow()):
+            print(f'Window that called: {self.GetWindow()}')
 
 # Frame for showing current time and how long more to due deadline
 class TimerFrame(wx.Frame):
