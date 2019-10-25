@@ -1,4 +1,5 @@
-# 16:27, 24/10/2019: TODO: Change update_values to check for any changes in TextCtrl instead of on EVT_KILL_FOCUS
+# 16:37, 25/10/2019: TODO: NotEmptyValidator. Update the time_values so that any changes to TextCtrl updates global variable
+# 16:43, 25/10/2019: https://stackoverflow.com/questions/30272188/wxpython-how-to-access-variables-between-across-classes-panels
 # 17:03, 23/10/2019: TODO: Complete horizontal_adding() as a helper method to add widgets in a horizontal row
 # 17:18, 22/10/2019: TODO: Trigger some kind of message or sound when the countdown timer reachest zero
 # Modules for time scheduler
@@ -198,9 +199,9 @@ class StartFrame(wx.Frame):
         
         # Temp dictionary variable to hold variables
         self.time_values = {
-            "hours": self.hours,
-            "minutes": self.minutes,
-            "seconds": self.seconds
+            "hours": '',
+            "minutes": '',
+            "seconds": ''
         }
         
         
@@ -211,43 +212,41 @@ class StartFrame(wx.Frame):
         row_sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         
         super().__init__(parent=None, title="Start timer")
-        start_panel = wx.Panel(self)
+        self.start_panel = wx.Panel(self)
         
         self.Bind(wx.EVT_CHOICE, self.update_choice)
         
         # Current Time label
-        self.current_label = wx.StaticText(start_panel, label='Current Time:')
+        self.current_label = wx.StaticText(self.start_panel, label='Current Time:')
         main_sizer.Add(self.current_label, 0, wx.ALL | wx.CENTER, 5)
         
         # Seconds label
-        # seconds_string = wx.String.Format(wxT("%i"), cur_time[2])
-        self.seconds_label = wx.StaticText(start_panel, label=str(cur_time[0]), size=(50, -1))
+        self.seconds_label = wx.StaticText(self.start_panel, label=str(cur_time[0]), size=(50, -1))
         row_sizer.Add(self.seconds_label, 0, wx.ALL | wx.CENTER, 5)
         
         # Minutes label
-        self.minutes_label = wx.StaticText(start_panel, label=str(cur_time[1]), size=(50, -1))
+        self.minutes_label = wx.StaticText(self.start_panel, label=str(cur_time[1]), size=(50, -1))
         row_sizer.Add(self.minutes_label, 0, wx.ALL | wx.CENTER, 5)
         
         # Hours label
-        self.hours_label = wx.StaticText(start_panel, label=str(cur_time[0]), size=(50, -1))
+        self.hours_label = wx.StaticText(self.start_panel, label=str(cur_time[0]), size=(50, -1))
         # self.hours_label.SetForegroundColour(wx.Colour(255, 0, 0))    # Changing text colour
         row_sizer.Add(self.hours_label, 0, wx.ALL | wx.CENTER, 5)
         
         main_sizer.Add(row_sizer)
         
         # Set due label
-        self.set_label = wx.StaticText(start_panel, label="Set due:")
+        self.set_label = wx.StaticText(self.start_panel, label="Set due:")
         main_sizer.Add(self.set_label, 0, wx.ALL | wx.CENTER, 5)
         
         # Create drop down list
-        self.choices = wx.Choice(start_panel, choices=["30 minutes", "1 hour", "10 seconds"])
+        self.choices = wx.Choice(self.start_panel, choices=["30 minutes", "1 hour", "10 seconds"])
         main_sizer.Add(self.choices, 0, wx.ALL | wx.CENTER, 5)
       
         
         # Start the countdown timer. Creates an instance of CountdownFrame
-        self.start_button = wx.Button(start_panel, label="Start")
+        self.start_button = wx.Button(self.start_panel, label="Start")
         self.start_button.Bind(wx.EVT_BUTTON, self.start_click)
-        # self.start_button.Bind(wx.EVT_BUTTON, self.verify_values)
         main_sizer.Add(self.start_button, 0, wx.ALL | wx.CENTER, 5)
         
         
@@ -258,87 +257,30 @@ class StartFrame(wx.Frame):
         initial_style = wx.TextAttr(text_colour, background_colour, font_styling, wx.TEXT_ALIGNMENT_DEFAULT)
         
         # Creates TextCtrl boxes to enter time details
-        self.hour_textctrl = wx.TextCtrl(start_panel, value="hh", style=wx.TE_PROCESS_ENTER, name="hours")
+        self.hour_textctrl = wx.TextCtrl(self.start_panel, value="hh", style=wx.TE_PROCESS_ENTER, name="hours", validator=NotEmptyValidator(self.time_values))
         self.hour_textctrl.SetStyle(0, len(self.hour_textctrl.GetValue()) - 1, initial_style)
         row_sizer2.Add(self.hour_textctrl, 0, wx.ALL | wx.CENTER, 5)
-        self.hour_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)      # On obtain focus
-        self.hour_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
         
         
-        self.colon1 = wx.TextCtrl(start_panel, value=":", size=(10, 20), style=wx.TE_READONLY)
+        self.colon1 = wx.TextCtrl(self.start_panel, value=":", size=(10, 20), style=wx.TE_READONLY)
         row_sizer2.Add(self.colon1, 0, wx.ALL | wx.CENTER, 5)
         
-        self.minute_textctrl = wx.TextCtrl(start_panel, value="mm",  style=wx.TE_PROCESS_ENTER, name="minutes")
+        self.minute_textctrl = wx.TextCtrl(self.start_panel, value="mm",  style=wx.TE_PROCESS_ENTER, name="minutes", validator=NotEmptyValidator(self.time_values))
         self.minute_textctrl.SetStyle(0, len(self.minute_textctrl.GetValue()) - 1, initial_style)
         row_sizer2.Add(self.minute_textctrl, 0, wx.ALL | wx.CENTER, 5)
-        self.minute_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)
-        self.minute_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
         
-        self.colon2 = wx.TextCtrl(start_panel, value=":", style=wx.TE_READONLY)
+        self.colon2 = wx.TextCtrl(self.start_panel, value=":", style=wx.TE_READONLY)
         row_sizer2.Add(self.colon2, 0, wx.ALL | wx.CENTER, 5)
         
-        self.second_textctrl = wx.TextCtrl(start_panel, value="ss",  style=wx.TE_PROCESS_ENTER, name="seconds")
+        self.second_textctrl = wx.TextCtrl(self.start_panel, value="ss",  style=wx.TE_PROCESS_ENTER, name="seconds", validator=NotEmptyValidator(self.time_values))
         self.second_textctrl.SetStyle(0, len(self.second_textctrl.GetValue() ) - 1, initial_style)
         row_sizer2.Add(self.second_textctrl, 0, wx.ALL | wx.CENTER, 5)
-        self.second_textctrl.Bind(wx.EVT_SET_FOCUS, self.empty_text)
-        self.second_textctrl.Bind(wx.EVT_KILL_FOCUS, self.update_values)
-        # End TextCtrl
         
         main_sizer.Add(row_sizer2)
         
-        start_panel.SetSizer(main_sizer)
+        self.start_panel.SetSizer(main_sizer)
         self.Show()
-        
-    # OnFocus TextCtrl handler
-    def empty_text(self, event):
-        widget = event.GetEventObject() # Get widget that triggered this event
-        
-        if widget.IsModified(): # If user has edited the field, do not remove the user entered text
-            widget.Enable(True)
-            widget.SetFocus()
-            # event.Skip()
-        else:
-            widget.MarkDirty()  # Mark widget as edited
-            # Remove initial placeholder of TextCtrl
-            widget.Enable(True)
-            widget.SetFocus()
-            widget.SetValue("")
-            # event.Skip()
-        
-        
-        print(f'Window name: {widget.GetName()}')
-        
-        event.Skip()    # Allows default handling to take place. The insertion point is inserted
-        # widget.Bind(wx.EVT_KILL_FOCUS, self.update_values)        # Causes update_values to be called more and more times. Not sure why
-        
     
-    # Printing statement repeats more and more times
-    def update_values(self, event):
-        # TODO: Update values on kill focus TextCtrl
-        widget = event.GetEventObject()
-        if widget.GetName() in self.time_values:
-            self.time_values[widget.GetName()] = widget.GetValue()
-            print(f'New value assigned to {widget.GetName()}: {widget.GetValue()}')
-        else:
-            print('Error in update_values method')
-        event.Skip()
-        
-    
-    # Passes values in TextCtrl to CountdownFrame
-    def timer_set(self):
-        set_hours = self.hour_textctrl.GetValue()
-        set_minutes = self.minute_textctrl.GetValue()
-        set_seconds = self.second_textctrl.GetValue()
-        
-        time_values = {
-            "hours": set_hours,
-            "minutes": set_minutes,
-            "seconds": set_seconds
-        }
-        
-        
-    
-        
     # TODO: Helper method to add multiple widgets in a row. Not completed yet.
     def horizontal_adding(self, *args):
         row_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -356,17 +298,96 @@ class StartFrame(wx.Frame):
         
         
         # countdown_frame_instance = CountdownFrame(self.choices.GetCurrentSelection())
-        print(f'Current hours: {self.hours}')
-        print(f'Current minutes: {self.minutes}')
-        print(f'Current seconds: {self.seconds}')
+        # Using the dictionary that contains the time values 
+        print(f'Current hours: {self.time_values["hours"]}')
+        print(f'Current minutes: {self.time_values["minutes"]}')
+        print(f'Current seconds: {self.time_values["seconds"]}')
+        
+        # Checking validate value?
+        '''
+        if (self.Validate() and self.TransferFromWindow()):
+            print('start_click: Validation successful')
+        else:
+            print('start_click: Validation FAILED')
+        '''
+        
+        success = self.hour_textctrl.GetValidator().Validate(self.start_panel)
+        print(self.time_values)
+        if success:
+            print('start_click success')
+        else:
+            print('start_click fail')
         
     def verify_values(self, event):
-        ValueValidator(self.event, self.hours, self.minutes, self.seconds)
+        # ValueValidator(self.event, self.time_values["hours"], self.time_values["minutes"], self.time_values["seconds"])
+        print('verify_values function')
+    
 
-class ValueValidator(wx.Validator):
-    def __init__ (self, event, hours, minutes, seconds):
-        if (self.Validate(event.GetEventObject()) and self.TransferFromWindow()):
-            print(f'Window that called: {self.GetWindow()}')
+# Validation for TextCtrl          
+class NotEmptyValidator(wx.Validator):
+    def __init__(self, time):
+        wx.Validator.__init__(self)
+        self.time = time
+        self.Bind(wx.EVT_SET_FOCUS, self.remove_placeholder)
+        self.Bind(wx.EVT_TEXT, self.value_check)
+        # parent = (self.GetWindow()).GetParent()
+        
+        
+        
+    def Clone(self):
+        return NotEmptyValidator(self.time)
+        
+    # The validation check
+    def Validate(self, win):
+        '''
+        cbCtrl = self.GetWindow()
+        text = cbCtrl.GetValue()
+        print("Validated successfully")
+        '''
+        children = win.GetChildren()
+        for i in children:
+            print(f'window children: {i}')
+        return True
+        
+    def TransferToWindow(self):
+        return True
+        
+    def TransferFromWindow(self):
+        return True
+        
+    def remove_placeholder(self, event):
+        window = self.GetWindow()
+        if not window.IsModified():
+            window.MarkDirty()
+            window.SetValue('')
+        event.Skip()
+        
+    def value_check(self, event):
+        time_stamps = {
+            'hours': [0, 25],   
+            'minutes': [0, 61],
+            'seconds': [0, 61]
+        }
+    
+        window = self.GetWindow()
+        window_name = window.GetName()
+        window_value = int(window.GetValue())   # Must convert to int as originally it is string
+        
+        print(f'Window value: {window_value}')
+        
+        # If they window name is equal to the time_stamps key, check if the window value is within the accepted range
+        if window_name in time_stamps:
+            range_list = time_stamps.get(window_name) 
+            if window_value in range(range_list[0], range_list[1]):
+                print("Success bois")
+                time[window_name] = window_value
+            else:
+                print("Debug time")
+                print(f'window_value type: {type(window_value)}')
+                print(f'range_list type: {type(range_list[0])}')
+        event.Skip()
+        
+            
 
 # Frame for showing current time and how long more to due deadline
 class TimerFrame(wx.Frame):
