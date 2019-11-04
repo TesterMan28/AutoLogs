@@ -1,3 +1,36 @@
+# 16:50, 4/11/2019: Try using Pafy to play youtube video from 'videoId' property
+from apiclient.discovery import build
+
+# Arguments for the build function
+api_key = 'AIzaSyA6-f_nvbmJp6xTIRJfmR-dz7g0Q1mMVx8'
+service_name = 'youtube'
+service_version = 'v3'
+
+youtube_object = build(service_name, service_version, developerKey=api_key)
+
+def youtube_search_keyword(query, max_results):
+    search_keyword = youtube_object.search().list(q = query, part = 'snippet', type= 'video', maxResults = max_results)
+    results = search_keyword.execute()
+    
+    for result in results['items']:
+        print(result['snippet']['title'])
+        
+if __name__ == '__main__':
+    youtube_search_keyword('Geeksforgeeks', max_results = 10)
+    
+'''
+Code to play audio from url
+import pafy
+import vlc
+
+url = "https://www.youtube.com/watch?v=SlPhMPnQ58k"
+video = pafy.new(url)
+bestaudio = video.getbestaudio()
+playurl = bestaudio.url
+player = vlc.MediaPlayer(playurl)
+player.play()       // player.stop, player.pause() to control the audio
+'''
+
 '''
 from apiclient.discovery import build
 
@@ -13,9 +46,9 @@ def youtube_search_keyword(query, max_results):
 
     # calling the search.list method to
     # retrieve youtube search results
-    search_keyword = youtube_object.search().list(q = query, part = "id, snippet", maxResults = max_results).execute()
+    search_keyword = youtube_object.search().list(q = query, part = "id, snippet", type='video', maxResults = max_results).execute()
     
-    # extracting the results from serach response
+    # extracting the results from search response
     results = search_keyword.get("items", [])
     
     # empty list to store video,
@@ -54,6 +87,7 @@ if __name__ == '__main__':
     youtube_search_keyword('Geeksforgeeks', max_results = 10)
 '''
 
+'''
 import os
 
 import google_auth_oauthlib.flow
@@ -89,3 +123,4 @@ def main():
     
 if __name__ == '__main__':
     main()
+'''

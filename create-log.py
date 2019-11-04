@@ -1,3 +1,4 @@
+# 17:15, 4/11/2019: TODO: Create a dropdown list (maybe with wxComboBox) that shows a list of results for youtube search
 # 16:37, 25/10/2019: TODO: NotEmptyValidator. Update the time_values so that any changes to TextCtrl updates global variable
 # 16:43, 25/10/2019: https://stackoverflow.com/questions/30272188/wxpython-how-to-access-variables-between-across-classes-panels
 # 17:03, 23/10/2019: TODO: Complete horizontal_adding() as a helper method to add widgets in a horizontal row
