@@ -1,19 +1,29 @@
 # 16:50, 4/11/2019: Try using Pafy to play youtube video from 'videoId' property
 from apiclient.discovery import build
+import vlc
+import pafy
+from datetime import datetime
 
 # Arguments for the build function
 api_key = 'AIzaSyA6-f_nvbmJp6xTIRJfmR-dz7g0Q1mMVx8'
 service_name = 'youtube'
 service_version = 'v3'
 
+# Arguments for time constraint
+start_time = datetime(year=2005, month=1, day=1).strftime('%Y-%m-%dT%H:%M:%SZ')
+end_time = datetime(year=2010, month=1, day=1).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+# Build youtube object
 youtube_object = build(service_name, service_version, developerKey=api_key)
 
 def youtube_search_keyword(query, max_results):
-    search_keyword = youtube_object.search().list(q = query, part = 'snippet', type= 'video', maxResults = max_results)
-    results = search_keyword.execute()
+    results = youtube_object.search().list(q = query, part = 'snippet', type= 'video', publishedAfter=start_time, publishedBefore=end_time, maxResults = max_results).execute()
+    
     
     for result in results['items']:
         print(result['snippet']['title'])
+        
+    
         
 if __name__ == '__main__':
     youtube_search_keyword('Geeksforgeeks', max_results = 10)
