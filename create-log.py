@@ -135,32 +135,6 @@ class CountdownFrame(wx.Frame):
         audio = AudioSegment.from_mp3(song_path)
         play(audio)
 
-class MyFrame(wx.Frame):
-    def __init__(self):
-        super().__init__(parent=None, title="Enter description")
-        panel = wx.Panel(self)
-        
-        my_sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        # Creating OnClose frame event handler
-        self.Bind(wx.EVT_CLOSE, self.on_close)
-        
-        self.text_area = wx.TextCtrl(panel, style = wx.TE_MULTILINE)
-        my_sizer.Add(self.text_area, 0, wx.ALL | wx.EXPAND, 5)
-        
-        self.submit = wx.Button(panel, label="Submit")
-        self.submit.Bind(wx.EVT_BUTTON, self.submit_click)
-        my_sizer.Add(self.submit, 0, wx.ALL | wx.CENTER, 5)
-        
-        panel.SetSizer(my_sizer)
-        self.Show()
-    
-    # Temp code
-    def submit_click(self, event):
-        print(self.text_area.GetValue())
-        
-    def on_close(self, event):
-        print('Closed')
 
 # Frame for setting due time and starting the countdown timer
 class StartFrame(wx.Frame):
@@ -240,9 +214,10 @@ class StartFrame(wx.Frame):
         
         # Search Box
         self.search_textctrl = wx.TextCtrl(self.start_panel, style=wx.TE_PROCESS_ENTER, name="search")
-        main_sizer.Add(self.search_textctrl)
+        # self.search_textctrl.Bind(wx.EVT_TEXT_ENTER, self.youtube_search)
         
         main_sizer.Add(self.row_sizer2)
+        main_sizer.Add(self.search_textctrl)
         
         self.start_panel.SetSizer(main_sizer)
         self.Show()
