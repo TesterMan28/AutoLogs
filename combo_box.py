@@ -1,5 +1,7 @@
 import wx
 import wx.grid as gridlib
+# 16:52, 7/11/2019: Try using OwnerDrawnComboBox instead of Grid
+# 16:21, 7/11/2019, For resizing image: https://stackoverflow.com/questions/2504143/how-to-resize-and-draw-an-image-using-wxpython/8466013#8466013
 # 17:02, 6/11/2019: How do I edit how many columns and rows the image spans
 # Temporarily try using wx.grid.Grid
 # Reference code: http://www.blog.pythonlibrary.org/2010/03/18/wxpython-an-introduction-to-grids/
@@ -13,13 +15,36 @@ class ComboBox(wx.Frame):
         
         # Create grid
         grid = gridlib.Grid(self.main_panel)
-        grid.CreateGrid(2, 2)
+        grid.CreateGrid(5, 5)
         
-        img = wx.Bitmap("wxpython.png", wx.BITMAP_TYPE_ANY)
+        # img = wx.Bitmap("wxpython.png", wx.BITMAP_TYPE_ANY)
+        
+        # Resizing the image 
+        img = wx.Image('wxpython.png', wx.BITMAP_TYPE_ANY)
+        img = img.Rescale(width=259, height=122)
+        img = img.ConvertToBitmap()
+        
         imageRenderer = MyImageRenderer(img)
         grid.SetCellRenderer(0, 0, imageRenderer)
-        grid.SetColSize(0, img.GetWidth()+2)
-        grid.SetRowSize(0, img.GetHeight()+2)
+        grid.SetCellSize(0, 0, 4, 4)
+        
+        # Added
+        grid.SetCellAlignment(0, 0, 1, 1)
+        # grid.SetDefaultCellAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        
+        # Center content
+        '''
+        attr = gridlib.GridCellAttr()
+        attr.SetAlignment(hAlign=wx.ALIGN_CENTRE, vAlign=wx.ALIGN_CENTRE)
+        # attr.SetReadOnly(True)
+        grid.SetAttr(0, 0, attr)
+        '''
+        
+        grid.SetColSize(0, img.GetWidth()/2)
+        grid.SetColSize(1, img.GetWidth()/2)
+        grid.SetRowSize(0, img.GetHeight()*2)
+        grid.SetRowSize(1, img.GetHeight()/2)
+        
         
         
         '''
@@ -78,14 +103,15 @@ class MyImageRenderer(wx.grid.GridCellRenderer):
             dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
             dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
         dc.DrawRectangle(rect)
-        width, height = self.img.GetWidth() + 10, self.img.GetHeight() + 10
-        print(f"Width: {width}, Height: {height}")  # Width: 100, Height: 34
-        print(f"Rect width: {rect.width}, rect height: {rect.height}")  # Width: 101, Height: 35
+        width, height = self.img.GetWidth(), self.img.GetHeight()
+        
+        print(f"Width: {width}, Height: {height}")  
+        print(f"Rect width: {rect.width}, rect height: {rect.height}")  
         if width > rect.width - 2:
-            width = rect.width - 50
+            width = rect.width - 2
         if height > rect.height - 2:
-            height = rect.height - 20
-        print(f"After Width: {width}, After Height: {height}")  # Width: 100, Height: 34
+            height = rect.height - 2
+        print(f"After Width: {width}, After Height: {height}")  
         dc.Blit(rect.x+1, rect.y+1, width, height, image, 0, 0, wx.COPY, True)
         
 if __name__ == '__main__':
