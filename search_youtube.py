@@ -13,21 +13,33 @@ service_version = 'v3'
 start_time = datetime(year=2005, month=1, day=1).strftime('%Y-%m-%dT%H:%M:%SZ')
 end_time = datetime(year=2010, month=1, day=1).strftime('%Y-%m-%dT%H:%M:%SZ')
 
+# Create list to return
+to_return = []
+
 # Build youtube object
 youtube_object = build(service_name, service_version, developerKey=api_key)
 
+# publishedAfter=start_time, publishedBefore=end_time
+
 def youtube_search_keyword(query, max_results):
-    results = youtube_object.search().list(q = query, part = 'snippet', type= 'video', publishedAfter=start_time, publishedBefore=end_time, maxResults = max_results).execute()
-    
-    
+    results = youtube_object.search().list(q = query, part = 'snippet', type= 'video', maxResults = max_results).execute()
+
+
     for result in results['items']:
-        print(result['snippet']['title'])
-        
-    
-        
-if __name__ == '__main__':
-    youtube_search_keyword('Geeksforgeeks', max_results = 10)
-    
+        thumbnail_url = result['snippet']['thumbnails']['default']['url']
+        title = result['snippet']['title']
+        # to_return.append({"thumbnail": thumbnail_url, "title": title})
+        # to_return.append(thumbnail_url)
+        to_return.append(thumbnail_url)
+        # to_return.append(title)
+
+    return to_return
+
+
+
+# if __name__ == '__main__':
+#     youtube_search_keyword('Geeksforgeeks', max_results = 10)
+
 '''
 Code to play audio from url
 import pafy
@@ -57,42 +69,42 @@ def youtube_search_keyword(query, max_results):
     # calling the search.list method to
     # retrieve youtube search results
     search_keyword = youtube_object.search().list(q = query, part = "id, snippet", type='video', maxResults = max_results).execute()
-    
+
     # extracting the results from search response
     results = search_keyword.get("items", [])
-    
+
     # empty list to store video,
     # channel, playlist metadata
     videos = []
     channels = []
     playlists = []
-    
+
     # extracting required info from each result object
     for result in results:
         # video result object
         if result['id']['kind'] == 'youtube# video':
-            videos.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"], 
-                    result["id"]["videoId"], result['snippet']['description'], 
-                    result['snippet']['thumbnails']['default']['url'])) 
-                    
+            videos.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"],
+                    result["id"]["videoId"], result['snippet']['description'],
+                    result['snippet']['thumbnails']['default']['url']))
+
         # playlist result object
         elif result['id']['kind'] == 'youtube# playlist':
-            playlists.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"], 
-                        result["id"]["playlistId"], 
-                        result['snippet']['description'], 
-                        result['snippet']['thumbnails']['default']['url'])) 
-                         
+            playlists.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"],
+                        result["id"]["playlistId"],
+                        result['snippet']['description'],
+                        result['snippet']['thumbnails']['default']['url']))
+
          # channel result object
         elif result['id']['kind'] == 'youtube# channel':
-            channels.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"], 
-                       result["id"]["channelId"],  
-                       result['snippet']['description'],  
-                       result['snippet']['thumbnails']['default']['url'])) 
-                       
-    print("Videos:\n", "\n".join(videos), "\n") 
-    print("Channels:\n", "\n".join(channels), "\n") 
-    print("Playlists:\n", "\n".join(playlists), "\n") 
-    
+            channels.append("% s (% s) (% s) (% s)" % (result["snippet"]["title"],
+                       result["id"]["channelId"],
+                       result['snippet']['description'],
+                       result['snippet']['thumbnails']['default']['url']))
+
+    print("Videos:\n", "\n".join(videos), "\n")
+    print("Channels:\n", "\n".join(channels), "\n")
+    print("Playlists:\n", "\n".join(playlists), "\n")
+
 if __name__ == '__main__':
     youtube_search_keyword('Geeksforgeeks', max_results = 10)
 '''
@@ -109,28 +121,28 @@ scopes = ['https://www.googleapis.com/auth/youtube.readonly']
 def main():
     # Disable OAuthLib HTTPS verification when running locally
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
-    
+
     api_service_name = "youtube"
     api_version = "v3"
     client_secrets_file = "client_secret_703825584565-g67j6rqagbdfaj9ua8va5s0kf0k6krbf.apps.googleusercontent.com.json"
-    
+
     # Get credentials and create an API client
     flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
         client_secrets_file, scopes)
     credentials = flow.run_console()
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, credentials=credentials)
-    
-    
-    
+
+
+
     request = youtube.channels().list(
         part="id, snippet, contentDetails",
         id="UC57vbls4XfwhnloATzguCZQ"
     )
     response = request.execute()
-    
+
     print(response)
-    
+
 if __name__ == '__main__':
     main()
 '''

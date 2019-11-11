@@ -1,6 +1,7 @@
 import wx
 import wx.adv
 import wx.grid as gridlib
+import search_youtube
 # 16:52, 7/11/2019: Try using OwnerDrawnComboBox instead of Grid
 # 16:21, 7/11/2019, For resizing image: https://stackoverflow.com/questions/2504143/how-to-resize-and-draw-an-image-using-wxpython/8466013#8466013
 # 17:02, 6/11/2019: How do I edit how many columns and rows the image spans
@@ -129,11 +130,25 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
         r = wx.Rect(*rect)
         r.Deflate(3, 5)     # Not sure how this works. Comment out later
 
+        # Define fixed size for rectanglar thumbnail
+        thumbWidth = 5
+        thumbHeight = 5
+
         penStyle = wx.PENSTYLE_SOLID
+        '''
         if item == 1:
             penStyle = wx.PENSTYLE_DOT_DASH
         elif item == 2:
             penStyle: wx.PENSTYLE_CROSS_HATCH
+        elif item == 3:
+            penStyle = wx.PENSTYLE_LONG_DASH
+        elif item == 4:
+            penStyle = wx.PENSTYLE_SHORT_DASH
+        elif item == 5:
+            penStyle = wx.PENSTYLE_DOT_DASH
+        elif item == 6:
+            penStyle = wx.PENSTYLE_BDIAGONAL_HATCH
+        '''
 
         pen = wx.Pen(dc.GetTextForeground(), 3, penStyle)
         dc.SetPen(pen)
@@ -141,12 +156,25 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
         if flags & wx.adv.ODCB_PAINTING_CONTROL:
             # For painting the control itself
             dc.DrawLine( r.x+5, r.y+r.height/2, r.x+r.width - 5, r.y+r.height/2)
+
         else:
+            # Draw image
+            img = wx.Bitmap()
+
             # For painting the items in the popup
             dc.DrawText( self.GetString( item ),
-                        r.x + 3,
+                        r.x + 100,
                         (r.y + 0) + ( (r.height/2) - dc.GetCharHeight() ) /2 )
-            dc.DrawLine( r.x + 5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
+            # dc.DrawLine( r.x + 5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
+            dc.SetPen(wx.Pen(wx.GREEN))
+            dc.SetBrush(wx.Brush(wx.GREEN))
+            # dc.DrawRectangle(r.width / 5 * 1 + 1, r.y + ((r.height / 2)) + 1, r.x+3, r.y+3)
+            dc.DrawRectangle(r.x + 3, r.y+(r.height / 2) - thumbHeight, thumbWidth, thumbHeight)
+            '''
+            dc.DrawText( self.GetString( item ),
+                        r.x + 100,
+                        (r.y + 0) + ( (r.height/2) + (dc.GetCharHeight() / 2 + 3) ) /2 )
+            '''
 
     # Overridden from OwnerDrawnComboBox, called for drawing the
     # background area of each item
@@ -185,14 +213,17 @@ class TestPanel(wx.Frame):
         self.main_panel = wx.Panel(self)
 
         # Temporary items
-        items = ['Item 1', 'Item 2']
+        # items = ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6']
+        # self.items = []
 
         # Create instance of OwnerDrawnComboBox
         # odcb = DrawComboBox(self, items)
-        odcb = DrawComboBox(self, choices=items, style=wx.CB_READONLY, pos=(20, 40), size=(250, -1))
+        # odcb = DrawComboBox(self, choices=self.items, style=wx.CB_READONLY, pos=(20, 40), size=(250, -1))
 
         # Button to trigger wx.EVT_PAINT
-        generate = wx.Button(self, label="Paint")
+        generate = wx.Button(self, label="Search")
+        self.Bind(wx.EVT_BUTTON, lambda event: self.searchResults(event, self), generate)
+
         # generate.Bind(wx.EVT_BUTTON, self.CallPaint)
 
         # Set temporary static image
@@ -201,10 +232,19 @@ class TestPanel(wx.Frame):
         # self.InitUI()
         self.Show()
 
+    def searchResults(self, event, parent):
+        # results = search_youtube.youtube_search_keyword("Maroon 5", 10)
+        # self.items.extend(results)
+        results = search_youtube.youtube_search_keyword("Maroon 5", 10)
+        # self.items.extend(results)
+        odcb = DrawComboBox(parent, choices=results, style=wx.CB_READONLY, pos=(20, 40), size=(250, -1))
+
     def InitUI(self):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Centre()
         self.Show(True)
+
+    # def CallPaint(self, e, list)
 
     '''
     def CallPaint(self, e):
