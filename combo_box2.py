@@ -2,6 +2,9 @@ import wx
 import wx.adv
 import wx.grid as gridlib
 import search_youtube
+from urllib.request import urlopen
+import io
+# 17:19, 13/11/2019: Find a way to insert title into item array as well
 # 16:52, 7/11/2019: Try using OwnerDrawnComboBox instead of Grid
 # 16:21, 7/11/2019, For resizing image: https://stackoverflow.com/questions/2504143/how-to-resize-and-draw-an-image-using-wxpython/8466013#8466013
 # 17:02, 6/11/2019: How do I edit how many columns and rows the image spans
@@ -152,6 +155,8 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
 
         pen = wx.Pen(dc.GetTextForeground(), 3, penStyle)
         dc.SetPen(pen)
+        # Initialize counter for list
+        i = 0
 
         if flags & wx.adv.ODCB_PAINTING_CONTROL:
             # For painting the control itself
@@ -159,17 +164,22 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
 
         else:
             # Draw image
-            img = wx.Bitmap()
+            if i == 0:
+                img = self.ImageURL(self.GetString(item))
+            else:
+                img = self.ImageURL(self.GetString(item + ))
+            # img = self.ImageURL(self.GetString(item[0]))
 
             # For painting the items in the popup
-            dc.DrawText( self.GetString( item ),
+            dc.DrawText( (self.GetString( item + 1 )),
                         r.x + 100,
                         (r.y + 0) + ( (r.height/2) - dc.GetCharHeight() ) /2 )
             # dc.DrawLine( r.x + 5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
             dc.SetPen(wx.Pen(wx.GREEN))
             dc.SetBrush(wx.Brush(wx.GREEN))
+            dc.DrawBitmap(img, r.x + 3, r.y+(r.height / 2) - thumbHeight)
             # dc.DrawRectangle(r.width / 5 * 1 + 1, r.y + ((r.height / 2)) + 1, r.x+3, r.y+3)
-            dc.DrawRectangle(r.x + 3, r.y+(r.height / 2) - thumbHeight, thumbWidth, thumbHeight)
+            # dc.DrawRectangle(r.x + 3, r.y+(r.height / 2) - thumbHeight, thumbWidth, thumbHeight)
             '''
             dc.DrawText( self.GetString( item ),
                         r.x + 100,
@@ -205,6 +215,15 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
         return -1; # default - will be measured from text width
+
+    def ImageURL(self, url):
+        f = urlopen(url)
+        data = f.read()
+
+        stream = io.BytesIO(data)
+        bmp = wx.Bitmap( (wx.Image( stream ).Rescale(width=20, height=20)) )
+        return bmp
+
 
 
 class TestPanel(wx.Frame):

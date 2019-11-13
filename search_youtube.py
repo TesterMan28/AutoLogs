@@ -29,9 +29,9 @@ def youtube_search_keyword(query, max_results):
         thumbnail_url = result['snippet']['thumbnails']['default']['url']
         title = result['snippet']['title']
         # to_return.append({"thumbnail": thumbnail_url, "title": title})
-        # to_return.append(thumbnail_url)
+        # to_return.append([thumbnail_url, title])
         to_return.append(thumbnail_url)
-        # to_return.append(title)
+        to_return.append(title)
 
     return to_return
 
