@@ -167,7 +167,7 @@ class DrawComboBox(wx.adv.OwnerDrawnComboBox):
             if i == 0:
                 img = self.ImageURL(self.GetString(item))
             else:
-                img = self.ImageURL(self.GetString(item + ))
+                img = self.ImageURL(self.GetString(item))
             # img = self.ImageURL(self.GetString(item[0]))
 
             # For painting the items in the popup

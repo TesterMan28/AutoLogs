@@ -24,7 +24,17 @@ youtube_object = build(service_name, service_version, developerKey=api_key)
 def youtube_search_keyword(query, max_results):
     results = youtube_object.search().list(q = query, part = 'snippet', type= 'video', maxResults = max_results).execute()
 
+    # Returns image url, title, description
+    for result in results['items']:
+        thumbnail_url = result['snippet']['thumbnails']['default']['url']
+        title = result['snippet']['title']
+        description = result['snippet']['description']
+        video_id = result['id']['videoId']
 
+        to_return.append({"thumbnail": thumbnail_url, "title": title,
+         "description": description, 'video_id': video_id})
+
+    '''
     for result in results['items']:
         thumbnail_url = result['snippet']['thumbnails']['default']['url']
         title = result['snippet']['title']
@@ -32,6 +42,7 @@ def youtube_search_keyword(query, max_results):
         # to_return.append([thumbnail_url, title])
         to_return.append(thumbnail_url)
         to_return.append(title)
+    '''
 
     return to_return
 
